@@ -1,0 +1,21 @@
+{
+  "name": "masterpiece",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -s 0"
+  },
+  "author": "uzulove",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "jsonwebtoken": "^8.1.0",
+    "mongoose": "^4.13.7"
+  },
+  "devDependencies": {
+    "mocha": "^4.0.1"
+  }
+}
