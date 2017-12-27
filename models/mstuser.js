@@ -4,22 +4,14 @@ const Schema = mongoose.Schema
 const valid = require('../utils/validateUtil')
 
 const mstUserSchema = new Schema({
-  email: {type: String, unique: true},
-  password: String,
-  name: {type: String, unique: true},
+  email: { type: String, unique: true, match: valid.regex.email() },
+  password: { type: String, required: true },
+  name: { type: String, unique: true, minlength: 1, maxlength: 10 },
   created: { type: Date, default: Date() },
   updated: Date,
   visited: Date,
-  visitcount: Number,
+  visitcount: { type: Number, min: 0 },
   isadmin: Boolean,
-})
-
-mstUserSchema.path('email').validate((value)=>{
-  return valid.validateEmail(value)
-})
-
-mstUserSchema.path('name').validate((value)=>{
-  return valid.validateName(value)
 })
 
 mstUserSchema.index({email: 1})
