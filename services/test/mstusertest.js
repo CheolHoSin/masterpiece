@@ -1,103 +1,6 @@
 const assert = require('assert')
 const mstuserDaoService = require('../mstuser')
-
-const mstusers = [
-  {
-    email: 'uyio2002@naver.com',
-    password: 'test#1111',
-    name: 'uzulove',
-    created: Date(2017, 12, 24, 11, 20, 25, 0),
-    visited: Date(2017, 12, 24, 11, 20, 25, 0),
-    updated: Date(2017, 12, 24, 11, 20, 25, 0),
-    visitcount: 3,
-    isadmin: true
-  },
-  {
-    email: 'uyio2002@gmail.com',
-    password: 'test#2222',
-    name: 'whiteball',
-    created: Date(2017, 11, 4, 8, 15, 22, 0),
-    visited: Date(2017, 11, 4, 8, 15, 22, 0),
-    updated: Date(2017, 11, 4, 8, 15, 22, 0),
-    visitcount: 5,
-    isadmin: false
-  },
-  {
-    email: 'sch1992@aster.com',
-    password: 'test#3333',
-    name: 'kage',
-    created: Date(2014, 1, 6, 11, 19, 23, 0),
-    visited: Date(2014, 1, 6, 11, 19, 23, 0),
-    updated: Date(2014, 1, 6, 11, 19, 23, 0),
-    visitcount: 102,
-    isadmin: false
-  },
-  {
-    email: 'testor@marioworld.com',
-    password: 'test#4444',
-    name: 'mario',
-    created: Date(2002, 3, 9, 12, 15, 18, 0),
-    visited: Date(2002, 3, 9, 12, 15, 18, 0),
-    updated: Date(2002, 3, 9, 12, 15, 18, 0),
-    visitcount: 10,
-    isadmin: false
-  },
-  {
-    email: 'huwahuwa@mishiro.com',
-    password: 'test#5555',
-    name: 'kozue',
-    created: Date(2011, 8, 17, 16, 7, 20, 0),
-    visited: Date(2011, 8, 17, 16, 7, 20, 0),
-    updated: Date(2011, 8, 17, 16, 7, 20, 0),
-    visitcount: 1,
-    isadmin: false
-  }
-]
-
-const newUser = {
-  email: 'cool@mishiro.com',
-  password: 'test#6666',
-  name: 'tachibana',
-  created: Date(2017, 9, 22, 9, 16, 23, 0),
-  visited: Date(2017, 9, 22, 9, 16, 23, 0),
-  updated: Date(2017, 9, 22, 9, 16, 23, 0),
-  visitcount: 5,
-  isadmin: false
-}
-
-const notUser = {
-  email: 'hello@world.com',
-  password: 'foo',
-  name: 'bar',
-  created: Date(2017, 12, 24, 11, 20, 25, 0),
-  visited: Date(2017, 12, 24, 11, 20, 25, 0),
-  updated: Date(2017, 12, 24, 11, 20, 25, 0),
-  visitcount: 13,
-  isadmin: false
-}
-
-const invalidUsers = {
-  emailInvalid: {
-    email: '@error',
-    password: '12345',
-    name: 'emailError',
-    created: Date(2017, 11, 4, 8, 15, 22, 0),
-    visited: Date(2017, 11, 4, 8, 15, 22, 0),
-    updated: Date(2017, 11, 4, 8, 15, 22, 0),
-    visitcount: 5,
-    isadmin: false
-  },
-  nameInvalid: {
-    email: 'test1@naver.com',
-    password: '12345',
-    name: 'THISISNOTINVALIDNAME!!!!!!',
-    created: Date(2017, 11, 4, 8, 15, 22, 0),
-    visited: Date(2017, 11, 4, 8, 15, 22, 0),
-    updated: Date(2017, 11, 4, 8, 15, 22, 0),
-    visitcount: 5,
-    isadmin: false
-  }
-}
+const userdummy = require('../../dummies/userdummy')
 
 function testsignup(user) {
   return mstuserDaoService.signUp(
@@ -132,15 +35,15 @@ function test() {
     describe('#signUp', () => {
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should success when mstusers and inserted result are the same', () => {
-        return testsignup(newUser)
+        return testsignup(userdummy.newUser)
       })
 
       it('should fail when email is invalid', () => {
-        const invalidUser = invalidUsers.emailInvalid
+        const invalidUser = userdummy.invalidUsers.emailInvalid
 
         return new Promise((resolve, reject)=>{
           testsignup(invalidUser)
@@ -150,7 +53,7 @@ function test() {
       })
 
       it('should fail when name is invalid', () => {
-        const invalidUser = invalidUsers.nameInvalid
+        const invalidUser = userdummy.invalidUsers.nameInvalid
 
         return new Promise((resolve, reject)=>{
           testsignup(invalidUser)
@@ -160,7 +63,7 @@ function test() {
       })
 
       it('should fail when duplicated user is inserted', () => {
-        const insertedUser = mstusers[0]
+        const insertedUser = userdummy.mstusers[0]
 
         return new Promise((resolve, reject) => {
           testsignup(insertedUser)
@@ -178,8 +81,9 @@ function test() {
     describe('#signIn', ()=> {
 
       before(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
+
       it('should success when it finds user', ()=>{
         const onSignIn = (user, res)=>{
           const p = new Promise((resolve, reject)=>{
@@ -189,8 +93,8 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.signIn(mstusers[1].email, mstusers[1].password)
-        .then((res)=>onSignIn(mstusers[1], res))
+        return mstuserDaoService.signIn(userdummy.mstusers[1].email, userdummy.mstusers[1].password)
+        .then((res)=>onSignIn(userdummy.mstusers[1], res))
       })
 
       it('should fail when it doesn\'t find user', ()=>{
@@ -203,7 +107,7 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.signIn(notUser.email, notUser.password)
+        return mstuserDaoService.signIn(userdummy.notUser.email, userdummy.notUser.password)
         .then(onSignIn)
       })
 
@@ -216,11 +120,11 @@ function test() {
     describe('#visit', ()=>{
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should return (original_visit+1) when completed', ()=>{
-        const loginedUser = mstusers[2]
+        const loginedUser = userdummy.mstusers[2]
 
         const visit = (user) => {
           loginedUser.visited = Date()
@@ -276,11 +180,11 @@ function test() {
     describe('#modifyName', () => {
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should change name when completed', () => {
-        const loginedUser = mstusers[0]
+        const loginedUser = userdummy.mstusers[0]
 
         const getId = (res)=>{
           const p = new Promise((resolve, reject) => {
@@ -341,11 +245,11 @@ function test() {
 
     describe('#modifyPassword', () => {
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should login with changed password when compelted', () => {
-        const loginedUser = mstusers[2]
+        const loginedUser = userdummy.mstusers[2]
         const newPassword = 'changed#000'
         const updated = Date()
 
@@ -385,11 +289,11 @@ function test() {
 
     describe('#findOneByEmail', () => {
       before(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should find the user with email when compeleted', () => {
-        const findUser = mstusers[1]
+        const findUser = userdummy.mstusers[1]
 
         const verify = (userA, userB) => {
           const p = new Promise((resolve, reject) => {
@@ -414,7 +318,7 @@ function test() {
 
           return p
         }
-        return mstuserDaoService.findOneByEmail(notUser.email).then(verify)
+        return mstuserDaoService.findOneByEmail(userdummy.notUser.email).then(verify)
       })
 
       after(()=>{
@@ -424,11 +328,11 @@ function test() {
 
     describe('#leave', () => {
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(mstusers)
+        return mstuserDaoService.insertAll(userdummy.mstusers)
       })
 
       it('should be disable to find the user when deleted', () => {
-        const deletedUser = mstusers[0]
+        const deletedUser = userdummy.mstusers[0]
 
         const onDeleted = (status) => {
           const p = new Promise((resolve, reject) => {
@@ -455,7 +359,7 @@ function test() {
       })
 
       it('should fail when deleting notUser', () => {
-        const deletedUser = notUser
+        const deletedUser = userdummy.notUser
 
         const onDeleted = (status) => {
           const p = new Promise((resolve, reject) => {
