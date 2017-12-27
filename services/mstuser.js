@@ -1,5 +1,4 @@
 const MstUser = require('../models/mstuser')
-const valid = require('../utils/validateUtil')
 
 // This function create mstuser and returns promise object: resolve(mstuser)
 function signUp(email, password, name, signUpDate, visitcount=1, isadmin=false) {
