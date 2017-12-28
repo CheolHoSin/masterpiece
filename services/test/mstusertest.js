@@ -125,13 +125,8 @@ function test() {
 
       it('should return (original_visit+1) when completed', ()=>{
         const loginedUser = userdummy.mstusers[2]
-
-        const visit = (user) => {
-          loginedUser.visited = Date()
-          loginedUser.visitcount += 1
-
-          return mstuserDaoService.visit(user._id, loginedUser.visited, loginedUser.visitcount)
-        }
+        loginedUser.visited = Date()
+        loginedUser.visitcount += 1
 
         const onVisit = (raw) => {
           const p = new Promise((resolve, reject)=>{
@@ -151,14 +146,14 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.signIn(loginedUser.email, loginedUser.password)
-        .then(visit)
+        return mstuserDaoService.visit(loginedUser.email, loginedUser.visited, loginedUser.visitcount)
         .then(onVisit)
         .then((res)=>mstuserDaoService.signIn(loginedUser.email, loginedUser.password))
         .then(verify)
       })
 
       it('should fail when notUser visits', ()=>{
+        const notUser = userdummy.notUser
         const onUpdate = (raw) => {
           const p = new Promise((resolve, reject)=>{
             if(raw.nModified>0) reject(new Error('Someone\'s visitcount added'))
@@ -168,7 +163,7 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.visit('5a407b08353c850ab4dae8fa', Date(), 100)
+        return mstuserDaoService.visit(notUser.email, Date(), 100)
         .then(onUpdate)
       })
 
@@ -185,18 +180,8 @@ function test() {
 
       it('should change name when completed', () => {
         const loginedUser = userdummy.mstusers[0]
-
-        const getId = (res)=>{
-          const p = new Promise((resolve, reject) => {
-            loginedUser._id = res._id
-            loginedUser.name = 'MISHIRO'
-            loginedUser.updated = Date()
-
-            resolve(loginedUser)
-          })
-
-          return p
-        }
+        loginedUser.name = 'MISHRO'
+        loginedUser.updated = Date()
 
         const onModified = (raw) => {
           const p = new Promise((resolve, reject) => {
@@ -216,15 +201,14 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.signIn(loginedUser.email, loginedUser.password)
-        .then(getId)
-        .then((user) => mstuserDaoService.modifyName(user._id, user.name, user.updated))
+        return mstuserDaoService.modifyName(loginedUser.email, loginedUser.name, loginedUser.updated)
         .then(onModified)
         .then((res)=>mstuserDaoService.signIn(loginedUser.email, loginedUser.password))
         .then((user)=>verify(user, loginedUser))
       })
 
       it('should fail when notUser request to modify name', () => {
+        const notUser = userdummy.notUser
         const onUpdate = (raw) => {
           const p = new Promise((resolve, reject) => {
             if (raw.nModified > 0) reject(new Error('Someone\'s name is modified'))
@@ -234,7 +218,7 @@ function test() {
           return p
         }
 
-        return mstuserDaoService.modifyName('5a407b08353c850ab4dae8fa', 'ERROR!', Date())
+        return mstuserDaoService.modifyName(notUser.email, 'ERROR!', Date())
         .then(onUpdate)
       })
 

@@ -22,13 +22,13 @@ function signIn(email, password) {
 }
 
 // This function find mstuser with id and modify visitcount and visitdatetime. Then returns promise object: resolve(mstuser)
-function visit(id, visited, visitcount) {
-  return MstUser.update({_id: id}, {$set: {visited: visited, visitcount: visitcount}})
+function visit(email, visited, visitcount) {
+  return MstUser.update({email: email}, {$set: {visited: visited, visitcount: visitcount}})
 }
 
 // This function find mstuser with id and modify name and modify updatedatetime. Then returns promise object: resolve(mstuser)
-function modifyName(id, name, updated=Date()) {
-  return MstUser.update({_id: id}, {$set: {name: name, updated: updated}})
+function modifyName(email, name, updated=Date()) {
+  return MstUser.update({email: email}, {$set: {name: name, updated: updated}})
 }
 
 // This function find mstuser with email and password, and modify updatedatetime. Then returns promise object: resolve(mstuser)
