@@ -96,7 +96,7 @@ const invalidUsers = {
   }
 }
 
-exports.mstusers = mstusers
-exports.newUser = newUser
-exports.notUser = notUser
-exports.invalidUsers = invalidUsers
+exports.mstusers = mstusers.slice()
+exports.newUser = Object.assign({}, newUser)
+exports.notUser = Object.assign({}, notUser)
+exports.invalidUsers = Object.assign({}, invalidUsers)

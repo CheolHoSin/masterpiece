@@ -13,8 +13,8 @@ function equalUser(userA, userB) {
   return (userA.email === userB.email) &&
   (userA.password === userB.password) &&
   (userA.name === userB.name) &&
-  (userA.created == userB.created) &&
-  (userA.updated == userB.updated) &&
+  (Date(userA.created) == Date(userB.created)) &&
+  (Date(userA.updated) == Date(userB.updated)) &&
   (userA.visited == userB.visited) &&
   (userA.visitedcount === userB.visitedcount) &&
   (userA.isadmin === userB.isadmin)
@@ -23,8 +23,8 @@ function equalUser(userA, userB) {
 function equalUserWithoutPswd(userA, userB) {
   return (userA.email === userB.email) &&
   (userA.name === userB.name) &&
-  (userA.created == userB.created) &&
-  (userA.updated == userB.updated) &&
+  (Date(userA.created) == Date(userB.created)) &&
+  (Date(userA.updated) == Date(userB.updated)) &&
   (userA.visited == userB.visited) &&
   (userA.visitedcount === userB.visitedcount) &&
   (userA.isadmin === userB.isadmin)
