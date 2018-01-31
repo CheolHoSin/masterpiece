@@ -1,5 +1,8 @@
+const mongoose = require('mongoose')
+
 const mstusers = [
   {
+    _id: mongoose.Types.ObjectId('5a716f21a4fe977bbc1f2ecc'),
     email: 'uyio2002@naver.com',
     password: 'test#1111',
     name: 'uzulove',
@@ -10,6 +13,7 @@ const mstusers = [
     isadmin: true
   },
   {
+    _id: mongoose.Types.ObjectId('5a716f21a4fe977bbc1f2edc'),
     email: 'uyio2002@gmail.com',
     password: 'test#2222',
     name: 'whiteball',
@@ -20,6 +24,7 @@ const mstusers = [
     isadmin: false
   },
   {
+    _id: mongoose.Types.ObjectId('5a716f21a4fe977bbc1f2eec'),
     email: 'sch1992@aster.com',
     password: 'test#3333',
     name: 'kage',
@@ -30,6 +35,7 @@ const mstusers = [
     isadmin: false
   },
   {
+    _id: mongoose.Types.ObjectId('5a716f21a4fe977bbc1f2efc'),
     email: 'testor@marioworld.com',
     password: 'test#4444',
     name: 'mario',
@@ -40,6 +46,7 @@ const mstusers = [
     isadmin: false
   },
   {
+    _id: mongoose.Types.ObjectId('5a716f21a4fe977bbc1f2f0c'),
     email: 'huwahuwa@mishiro.com',
     password: 'test#5555',
     name: 'kozue',
@@ -78,16 +85,6 @@ const invalidUsers = {
     email: '@error',
     password: '12345',
     name: 'emailError',
-    created: Date(2017, 11, 4, 8, 15, 22, 0),
-    visited: Date(2017, 11, 4, 8, 15, 22, 0),
-    updated: Date(2017, 11, 4, 8, 15, 22, 0),
-    visitcount: 5,
-    isadmin: false
-  },
-  nameInvalid: {
-    email: 'test1@naver.com',
-    password: '12345',
-    name: 'THISISNOTINVALIDNAME!!!!!!',
     created: Date(2017, 11, 4, 8, 15, 22, 0),
     visited: Date(2017, 11, 4, 8, 15, 22, 0),
     updated: Date(2017, 11, 4, 8, 15, 22, 0),

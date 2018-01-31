@@ -6,7 +6,7 @@ const valid = require('../utils/validateUtil')
 const mstUserSchema = new Schema({
   email: { type: String, unique: true, match: valid.regex.email() },
   password: { type: String, required: true },
-  name: { type: String, unique: true, minlength: 1, maxlength: 10 },
+  name: { type: String, unique: true },
   created: { type: Date, default: Date() },
   updated: Date,
   visited: Date,

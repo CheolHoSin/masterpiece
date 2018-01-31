@@ -1,63 +1,48 @@
 const assert = require('assert')
-const mstuserDaoService = require('../mstuser')
+const mstuserService = require('../mstuser')
 const userdummy = require('../../dummies/userdummy')
+const testMethods = require('../../utils/testMethods')
 
-function testsignup(user) {
-  return mstuserDaoService.signUp(
+function signup(user) {
+  return mstuserService.signUp(
     user.email, user.password, user.name,
     user.created, user.visitcount, user.isadmin
   )
 }
 
-function equalUser(userA, userB) {
-  return (userA.email === userB.email) &&
-  (userA.password === userB.password) &&
-  (userA.name === userB.name) &&
-  (Date(userA.created) == Date(userB.created)) &&
-  (Date(userA.updated) == Date(userB.updated)) &&
-  (userA.visited == userB.visited) &&
-  (userA.visitedcount === userB.visitedcount) &&
-  (userA.isadmin === userB.isadmin)
-}
-
-function equalUserWithoutPswd(userA, userB) {
-  return (userA.email === userB.email) &&
-  (userA.name === userB.name) &&
-  (Date(userA.created) == Date(userB.created)) &&
-  (Date(userA.updated) == Date(userB.updated)) &&
-  (userA.visited == userB.visited) &&
-  (userA.visitedcount === userB.visitedcount) &&
-  (userA.isadmin === userB.isadmin)
-}
+const equalValidator = testMethods.createValidatorBinary(
+  (msg, a, b) => {
+    if (a.email != b.email) { msg.err = 'emails are not same'; return false }
+    if (a.name != b.name) { msg.err = 'names are not same'; return false }
+    if (Date(a.created) != Date(b.created)) { msg.err = 'createds are not same'; return false }
+    if (Date(a.updated) != Date(b.updated)) { msg.err = 'updateds are not same'; return false }
+    if (Date(a.visited) != Date(b.visited)) { msg.err = 'visiteds are not same'; return false }
+    if (a.visitedcount != b.visitedcount) { msg.err = 'visitedcounts are not same'; return false }
+    if (a.isAdmin != b.isAdmin) { msg.err = 'isAdmins are not same'; return false }
+    msg.err = ''
+    msg.res = 'two are same'
+    return true
+  }
+)
 
 function test() {
-  describe('UserDaoService', () => {
+  describe('UserService', () => {
     describe('#signUp', () => {
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should success when mstusers and inserted result are the same', () => {
-        return testsignup(userdummy.newUser)
+        return signup(userdummy.newUser)
       })
 
       it('should fail when email is invalid', () => {
         const invalidUser = userdummy.invalidUsers.emailInvalid
 
         return new Promise((resolve, reject)=>{
-          testsignup(invalidUser)
+          signup(invalidUser)
           .then((res)=>{reject(new Error('Email Validator doesn\'t works well'))})
-          .catch((err)=>{resolve()})
-        })
-      })
-
-      it('should fail when name is invalid', () => {
-        const invalidUser = userdummy.invalidUsers.nameInvalid
-
-        return new Promise((resolve, reject)=>{
-          testsignup(invalidUser)
-          .then((res)=>{reject(new Error('Name Validator doesn\'t works well'))})
           .catch((err)=>{resolve()})
         })
       })
@@ -66,53 +51,36 @@ function test() {
         const insertedUser = userdummy.mstusers[0]
 
         return new Promise((resolve, reject) => {
-          testsignup(insertedUser)
+          signup(insertedUser)
           .then((res1)=>{reject(new Error('Duplicated User is inserted'))})
           .catch((err)=>{resolve()})
         })
       })
 
       afterEach(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
 
     })
 
     describe('#signIn', ()=> {
 
-      before(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+      beforeEach(()=>{
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should success when it finds user', ()=>{
-        const onSignIn = (user, res)=>{
-          const p = new Promise((resolve, reject)=>{
-            if(equalUserWithoutPswd(user, res)) resolve()
-            else reject(new Error('Not Equal User' + user.email))
-          })
-          return p
-        }
-
-        return mstuserDaoService.signIn(userdummy.mstusers[1].email, userdummy.mstusers[1].password)
-        .then((res)=>onSignIn(userdummy.mstusers[1], res))
+        return mstuserService.signIn(userdummy.mstusers[1].email, userdummy.mstusers[1].password)
+        .then((res) => testMethods.validate(equalValidator, userdummy.mstusers[1], res))
       })
 
       it('should fail when it doesn\'t find user', ()=>{
-        const onSignIn = (res) => {
-          const p = new Promise((resolve, reject)=>{
-            if(res) reject(new Error('User is found'))
-            else resolve()
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.signIn(userdummy.notUser.email, userdummy.notUser.password)
-        .then(onSignIn)
+        return mstuserService.signIn(userdummy.notUser.email, userdummy.notUser.password)
+        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
       })
 
-      after(()=>{
-        return mstuserDaoService.dropCollection()
+      afterEach(()=>{
+        return mstuserService.dropCollection()
       })
 
     })
@@ -120,62 +88,34 @@ function test() {
     describe('#visit', ()=>{
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should return (original_visit+1) when completed', ()=>{
-        const loginedUser = userdummy.mstusers[2]
+        const loginedUser = userdummy.mstusers[1]
         loginedUser.visited = Date()
         loginedUser.visitcount += 1
-
-        const onVisit = (raw) => {
-          const p = new Promise((resolve, reject)=>{
-            if(raw.nModified==1) resolve()
-            else reject(new Error('Update Failed'))
-          })
-
-          return p
-        }
-
-        const verify = (user) => {
-          const p = new Promise((resolve, reject) => {
-            if(equalUserWithoutPswd(user, loginedUser)) resolve()
-            else reject(new Error('Visit Failed'))
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.visit(loginedUser.email, loginedUser.visited, loginedUser.visitcount)
-        .then(onVisit)
-        .then((res)=>mstuserDaoService.signIn(loginedUser.email, loginedUser.password))
-        .then(verify)
+        return mstuserService.visit(loginedUser.email, loginedUser.visited, loginedUser.visitcount)
+        .then((raw) => testMethods.validate(testMethods.nModifiedValidator, raw))
+        .then(()=>mstuserService.signIn(loginedUser.email, loginedUser.password))
+        .then((res) => testMethods.validate(equalValidator, loginedUser, res))
       })
 
       it('should fail when notUser visits', ()=>{
         const notUser = userdummy.notUser
-        const onUpdate = (raw) => {
-          const p = new Promise((resolve, reject)=>{
-            if(raw.nModified>0) reject(new Error('Someone\'s visitcount added'))
-            else resolve()
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.visit(notUser.email, Date(), 100)
-        .then(onUpdate)
+        return mstuserService.visit(notUser.email, Date(), 100)
+        .then((raw) => testMethods.validate(testMethods.nModifiedFailValidator, raw))
       })
 
       afterEach(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
     })
 
     describe('#modifyName', () => {
 
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should change name when completed', () => {
@@ -183,53 +123,27 @@ function test() {
         loginedUser.name = 'MISHRO'
         loginedUser.updated = Date()
 
-        const onModified = (raw) => {
-          const p = new Promise((resolve, reject) => {
-            if (raw.nModified==1) resolve()
-            else reject(new Error('Update Failed'))
-          })
-
-          return p
-        }
-
-        const verify = (userA, userB) => {
-          const p = new Promise((resolve, reject) => {
-            if (equalUserWithoutPswd(userA, userB)) resolve()
-            else reject(new Error('Not updated Name'))
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.modifyName(loginedUser.email, loginedUser.name, loginedUser.updated)
-        .then(onModified)
-        .then((res)=>mstuserDaoService.signIn(loginedUser.email, loginedUser.password))
-        .then((user)=>verify(user, loginedUser))
+        return mstuserService.modifyName(loginedUser.email, loginedUser.name, loginedUser.updated)
+        .then((raw) => testMethods.validate(testMethods.nModifiedValidator, raw))
+        .then(()=>mstuserService.signIn(loginedUser.email, loginedUser.password))
+        .then((res) => testMethods.validate(equalValidator, loginedUser, res))
       })
 
       it('should fail when notUser request to modify name', () => {
         const notUser = userdummy.notUser
-        const onUpdate = (raw) => {
-          const p = new Promise((resolve, reject) => {
-            if (raw.nModified > 0) reject(new Error('Someone\'s name is modified'))
-            else resolve()
-          })
 
-          return p
-        }
-
-        return mstuserDaoService.modifyName(notUser.email, 'ERROR!', Date())
-        .then(onUpdate)
+        return mstuserService.modifyName(notUser.email, 'ERROR!', Date())
+        .then((raw)=> testMethods.validate(testMethods.nModifiedFailValidator, raw))
       })
 
       afterEach(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
     })
 
     describe('#modifyPassword', () => {
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should login with changed password when compelted', () => {
@@ -237,129 +151,62 @@ function test() {
         const newPassword = 'changed#000'
         const updated = Date()
 
-        const onUpdate = (raw) => {
-          const p = new Promise((resolve, reject)=>{
-            if (raw.nModified==1) {
-              loginedUser.password = newPassword
-              loginedUser.updated = updated
-              resolve(loginedUser)
-            } else {
-              reject(new Error('Update Failed'))
-            }
-          })
-
-          return p
-        }
-
-        const verify = (userA, userB) => {
-          const p = new Promise((resolve, reject) => {
-            if (equalUserWithoutPswd(userA, userB)) resolve()
-            else reject(new Error('Another user\'s password may be upated'))
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.modifyPassword(loginedUser.email, loginedUser.password, newPassword, updated)
-        .then(onUpdate)
-        .then((user)=>mstuserDaoService.signIn(user.email, user.password))
-        .then((user)=>verify(user, loginedUser))
+        return mstuserService.modifyPassword(loginedUser.email, loginedUser.password, newPassword, updated)
+        .then((raw) => testMethods.validate(testMethods.nModifiedValidator, raw))
+        .then(()=>mstuserService.signIn(loginedUser.email, newPassword))
+        .then((res) => testMethods.validate(equalValidator, loginedUser, res))
       })
 
       afterEach(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
     })
 
     describe('#findOneByEmail', () => {
       before(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should find the user with email when compeleted', () => {
         const findUser = userdummy.mstusers[1]
 
-        const verify = (userA, userB) => {
-          const p = new Promise((resolve, reject) => {
-            if(equalUserWithoutPswd(userA, userB)) resolve()
-            else reject('User Not Equal')
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.findOneByEmail(findUser.email)
-        .then((user) => verify(user, findUser))
+        return mstuserService.findOneByEmail(findUser.email)
+        .then((res) => testMethods.validate(equalValidator, findUser, res))
       })
 
       it('should returns null it finds notUser', () => {
-
-        const verify = (user)=>{
-          const p = new Promise((resolve, reject) => {
-            if(user) reject(new Error('Found User'))
-            else resolve()
-          })
-
-          return p
-        }
-        return mstuserDaoService.findOneByEmail(userdummy.notUser.email).then(verify)
+        return mstuserService.findOneByEmail(userdummy.notUser.email)
+        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
       })
 
       after(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
     })
 
     describe('#leave', () => {
       beforeEach(()=>{
-        return mstuserDaoService.insertAll(userdummy.mstusers)
+        return mstuserService.insertAll(userdummy.mstusers)
       })
 
       it('should be disable to find the user when deleted', () => {
         const deletedUser = userdummy.mstusers[0]
 
-        const onDeleted = (status) => {
-          const p = new Promise((resolve, reject) => {
-            if (status.deletedCount == 1) resolve()
-            else reject(new Error('User Not Deleted'))
-          })
-
-          return p
-        }
-
-        const verify = (user) => {
-          const p = new Promise((resolve, reject) => {
-            if(user) reject(new Error('Another is Deleted'))
-            else resolve()
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.leave(deletedUser.email, deletedUser.password)
-        .then(onDeleted)
-        .then(()=>mstuserDaoService.findOneByEmail(deletedUser.email))
-        .then(verify)
+        return mstuserService.leave(deletedUser.email, deletedUser.password)
+        .then((status) => testMethods.validate(testMethods.deletedValidator, status))
+        .then(()=>mstuserService.findOneByEmail(deletedUser.email))
+        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
       })
 
       it('should fail when deleting notUser', () => {
         const deletedUser = userdummy.notUser
 
-        const onDeleted = (status) => {
-          const p = new Promise((resolve, reject) => {
-            if(status.deletedCount > 0) reject(new Error('User Deleted'))
-            else resolve()
-          })
-
-          return p
-        }
-
-        return mstuserDaoService.leave(deletedUser.email, deletedUser.password)
-        .then(onDeleted)
+        return mstuserService.leave(deletedUser.email, deletedUser.password)
+        .then((status) => testMethods.validate(testMethods.notDeletedValidator, status))
       })
 
       afterEach(()=>{
-        return mstuserDaoService.dropCollection()
+        return mstuserService.dropCollection()
       })
     })
 
