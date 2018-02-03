@@ -22,7 +22,7 @@ const root = require('./root')
 const serverConfigs = require('./settings/server_configs')
 
 // add middlewares for this router and handlers
-rootRouter.use(bodyParser.urlencoded({ extended: true }))         // body parser
+rootRouter.use(bodyParser.urlencoded({ extended: false }))         // body parser
 rootRouter.use(cookieParser())                                    // cookie parser
 rootRouter.use('/apis', tokenParser(root.notLogined))             // jwt token verifier
 rootRouter.use('/', simpleHtml({ root: serverConfigs.viewPath}))  // simpleHtml

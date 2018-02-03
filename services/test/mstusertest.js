@@ -1,4 +1,3 @@
-const assert = require('assert')
 const mstuserService = require('../mstuser')
 const userdummy = require('../../dummies/userdummy')
 const testMethods = require('../../utils/testMethods')
@@ -26,19 +25,27 @@ const equalValidator = testMethods.createValidatorBinary(
 )
 
 function test() {
-  describe('UserService', () => {
+  describe('MstUser', () => {
+
+    beforeEach(()=>{
+      return mstuserService.insertAll(userdummy.getDummies())
+    })
+
+    afterEach(()=>{
+      return mstuserService.dropCollection()
+    })
+
     describe('#signUp', () => {
 
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
-
       it('should success when mstusers and inserted result are the same', () => {
-        return signup(userdummy.newUser)
+        const newUser = userdummy.getNew()
+
+        return signup(newUser)
+        .then((res) => testMethods.validate(equalValidator, newUser, res))
       })
 
       it('should fail when email is invalid', () => {
-        const invalidUser = userdummy.invalidUsers.emailInvalid
+        const invalidUser = userdummy.getInvalid().emailInvalid
 
         return new Promise((resolve, reject)=>{
           signup(invalidUser)
@@ -48,7 +55,7 @@ function test() {
       })
 
       it('should fail when duplicated user is inserted', () => {
-        const insertedUser = userdummy.mstusers[0]
+        const insertedUser = userdummy.getDummy(0)
 
         return new Promise((resolve, reject) => {
           signup(insertedUser)
@@ -57,44 +64,33 @@ function test() {
         })
       })
 
-      afterEach(()=>{
-        return mstuserService.dropCollection()
-      })
-
     })
 
     describe('#signIn', ()=> {
 
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
-
       it('should success when it finds user', ()=>{
-        return mstuserService.signIn(userdummy.mstusers[1].email, userdummy.mstusers[1].password)
-        .then((res) => testMethods.validate(equalValidator, userdummy.mstusers[1], res))
+        const targetUser = userdummy.getDummy(1)
+
+        return mstuserService.signIn(targetUser.email, targetUser.password)
+        .then((res) => testMethods.validate(equalValidator, targetUser, res))
       })
 
       it('should fail when it doesn\'t find user', ()=>{
-        return mstuserService.signIn(userdummy.notUser.email, userdummy.notUser.password)
-        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
-      })
+        const notUser = userdummy.getNot()
 
-      afterEach(()=>{
-        return mstuserService.dropCollection()
+        return mstuserService.signIn(notUser.email, notUser.password)
+        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
       })
 
     })
 
     describe('#visit', ()=>{
 
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
-
       it('should return (original_visit+1) when completed', ()=>{
-        const loginedUser = userdummy.mstusers[1]
+        const loginedUser = userdummy.getDummy(1)
         loginedUser.visited = Date()
         loginedUser.visitcount += 1
+
         return mstuserService.visit(loginedUser.email, loginedUser.visited, loginedUser.visitcount)
         .then((raw) => testMethods.validate(testMethods.nModifiedValidator, raw))
         .then(()=>mstuserService.signIn(loginedUser.email, loginedUser.password))
@@ -102,24 +98,17 @@ function test() {
       })
 
       it('should fail when notUser visits', ()=>{
-        const notUser = userdummy.notUser
+        const notUser = userdummy.getNot()
+
         return mstuserService.visit(notUser.email, Date(), 100)
         .then((raw) => testMethods.validate(testMethods.nModifiedFailValidator, raw))
-      })
-
-      afterEach(()=>{
-        return mstuserService.dropCollection()
       })
     })
 
     describe('#modifyName', () => {
 
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
-
       it('should change name when completed', () => {
-        const loginedUser = userdummy.mstusers[0]
+        const loginedUser = userdummy.getDummy(0)
         loginedUser.name = 'MISHRO'
         loginedUser.updated = Date()
 
@@ -130,24 +119,17 @@ function test() {
       })
 
       it('should fail when notUser request to modify name', () => {
-        const notUser = userdummy.notUser
+        const notUser = userdummy.getNot()
 
         return mstuserService.modifyName(notUser.email, 'ERROR!', Date())
         .then((raw)=> testMethods.validate(testMethods.nModifiedFailValidator, raw))
       })
-
-      afterEach(()=>{
-        return mstuserService.dropCollection()
-      })
     })
 
     describe('#modifyPassword', () => {
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
 
       it('should login with changed password when compelted', () => {
-        const loginedUser = userdummy.mstusers[2]
+        const loginedUser = userdummy.getDummy(2)
         const newPassword = 'changed#000'
         const updated = Date()
 
@@ -156,41 +138,29 @@ function test() {
         .then(()=>mstuserService.signIn(loginedUser.email, newPassword))
         .then((res) => testMethods.validate(equalValidator, loginedUser, res))
       })
-
-      afterEach(()=>{
-        return mstuserService.dropCollection()
-      })
     })
 
     describe('#findOneByEmail', () => {
-      before(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
 
       it('should find the user with email when compeleted', () => {
-        const findUser = userdummy.mstusers[1]
+        const findUser = userdummy.getDummy(1)
 
         return mstuserService.findOneByEmail(findUser.email)
         .then((res) => testMethods.validate(equalValidator, findUser, res))
       })
 
       it('should returns null it finds notUser', () => {
-        return mstuserService.findOneByEmail(userdummy.notUser.email)
-        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
-      })
+        const notUser = userdummy.getNot()
 
-      after(()=>{
-        return mstuserService.dropCollection()
+        return mstuserService.findOneByEmail(notUser.email)
+        .then((res) => testMethods.validate(testMethods.notExistValidator, res))
       })
     })
 
     describe('#leave', () => {
-      beforeEach(()=>{
-        return mstuserService.insertAll(userdummy.mstusers)
-      })
 
       it('should be disable to find the user when deleted', () => {
-        const deletedUser = userdummy.mstusers[0]
+        const deletedUser = userdummy.getDummy(0)
 
         return mstuserService.leave(deletedUser.email, deletedUser.password)
         .then((status) => testMethods.validate(testMethods.deletedValidator, status))
@@ -199,14 +169,10 @@ function test() {
       })
 
       it('should fail when deleting notUser', () => {
-        const deletedUser = userdummy.notUser
+        const deletedUser = userdummy.getNot()
 
         return mstuserService.leave(deletedUser.email, deletedUser.password)
         .then((status) => testMethods.validate(testMethods.notDeletedValidator, status))
-      })
-
-      afterEach(()=>{
-        return mstuserService.dropCollection()
       })
     })
 
